@@ -25,7 +25,7 @@ This step creates the baseline (V1) with three tables and their relationships + 
 
 ## Artifacts Produced
 - **EF migration (C#)**  
-  `src/StudentManagement.Console/Migrations/<timestamp>_V1__InitialSchema.cs`
+  `src/StudentManagement/Migrations/<timestamp>_V1__InitialSchema.cs`
 - **Generated SQL script (idempotent)**  
   `ef-approach/artifacts/V1__InitialSchema.sql`
 
@@ -48,7 +48,6 @@ dotnet ef migrations script 0 V1__InitialSchema --idempotent -o ef-approach/arti
 
 ## Overview
 This migration introduces a new column `MiddleName` to the `Student` table.  
-The change reflects a realistic data requirement, as not all students have a middle name.  
 The column is **nullable** to preserve data integrity and avoid enforcing a value.
 
 ---
@@ -61,7 +60,7 @@ The column is **nullable** to preserve data integrity and avoid enforcing a valu
 
 ## Artifacts Produced
 - **EF migration (C#)**  
-  `src/StudentManagement.Console/Migrations/<timestamp>_V2__AddMiddleName.cs`
+  `src/StudentManagement/Migrations/<timestamp>_V2__AddMiddleName.cs`
 - **Generated SQL script (V1 → V2)**  
   `ef-approach/artifacts/V2__AddMiddleName.sql`
 
@@ -80,5 +79,45 @@ dotnet ef migrations script V1__InitialSchema V2__AddMiddleName -o ef-approach/a
 
 - The column is added as **nullable**, so existing records can be added with no required backfill.
 - This approach ensures a safe schema evolution without affecting application behavior or requiring downtime.
+
+---
+
+# EF (Change-based) — V3 Add DateOfBirth to Student
+
+## Overview
+This migration introduces a new column `DateOfBirth` to the `Student` table.  
+The column is **not nullable** which requires a backfill to preserve data integrity.
+
+---
+
+## Schema Change
+- **Student**
+    - Added column: `DateOfBirth` (`datetime2`, not null)
+
+---
+
+## Artifacts Produced
+- **EF migration (C#)**  
+  `src/StudentManagement/Migrations/<timestamp>_V3__AddDateOfBirth.cs`
+- **Generated SQL script (V2 → V3)**  
+  `ef-approach/artifacts/V3__AddDateOfBirth.sql`
+
+---
+
+## Commands Run
+```bash
+# 1) Create migration after updating model & Fluent API
+dotnet ef migrations add V3__AddDateOfBirth 
+
+# 2) Generate SQL script for V2 -> V3 only
+dotnet ef migrations script V2__AddMiddleName V3__AddDateOfBirth -o ef-approach/artifacts/V3__AddDateOfBirth.sql
+ ```
+
+## Reasoning: Non-Destructive (via default value)
+
+- Adding a `NOT NULL` column is typically destructive as it would break existing rows.
+- However, this migration uses a **default value** (`0001-01-01`) to safely backfill existing rows.
+- EF applies the column with `NOT NULL` + `DEFAULT`, making the change **non-destructive** at runtime.
+- No application downtime is needed, and all existing records remain valid.
 
 ---
