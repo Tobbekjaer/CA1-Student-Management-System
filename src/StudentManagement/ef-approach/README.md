@@ -26,8 +26,10 @@ This step creates the baseline (V1) with three tables and their relationships + 
 ## Artifacts Produced
 - **EF migration (C#)**  
   `src/StudentManagement.Console/Migrations/<timestamp>_V1__InitialSchema.cs`
-- **Generated SQL script**  
+- **Generated SQL script (idempotent)**  
   `ef-approach/artifacts/V1__InitialSchema.sql`
+
+“Idempotent” = safe to run multiple times; if objects already exist correctly, it does nothing.
 
 ---
 
