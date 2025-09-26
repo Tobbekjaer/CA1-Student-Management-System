@@ -21,6 +21,8 @@ public class StudentDbContext : DbContext
             e.Property(s => s.FirstName)
                 .IsRequired()
                 .HasMaxLength(100);
+            e.Property(s => s.MiddleName)
+                .HasMaxLength(100);
             e.Property(s => s.LastName)
                 .IsRequired()
                 .HasMaxLength(100);
