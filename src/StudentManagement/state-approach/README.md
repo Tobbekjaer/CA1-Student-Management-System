@@ -202,3 +202,65 @@ END
 - If both columns exist, the script **copies existing values** from `Grade` into `FinalGrade` before dropping the old column, avoiding data loss.
 - If neither column exists (edge case), the script **adds `FinalGrade`** to bring the schema into alignment.
 - This approach guarantees that existing data is retained and the schema converges to the desired state.  
+
+---
+
+# State-based — V6 Add Department Relation
+
+## Overview
+Introduced a new `Department` table with support for assigning an **Instructor** as the department head.  
+A department may have zero or one head, and an instructor may head at most one department.
+
+---
+
+## Schema Changes
+- **Department**
+    - `Id INT IDENTITY(1,1) PRIMARY KEY`
+    - `Name NVARCHAR(200) NOT NULL`
+    - `Budget DECIMAL(18,2) NOT NULL`
+    - `StartDate DATETIME2 NOT NULL`
+    - `DepartmentHeadId INT NULL` → FK to `Instructor.Id`
+- **Constraints**
+    - Foreign key: `DepartmentHeadId → Instructor.Id` with `ON DELETE SET NULL`
+    - Unique index on `DepartmentHeadId` (filtered to allow multiple NULLs)
+
+---
+
+## Artifacts Produced
+- `state-approach/state/v6/schema.sql` – full schema at V6
+- `state-approach/artifacts/V6__AddDepartmentRelation.sql` – idempotent deployment script
+
+---
+
+## Deployment Logic (Essential)
+```sql
+IF OBJECT_ID('dbo.Department', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Department (
+        Id INT NOT NULL IDENTITY(1,1),
+        Name NVARCHAR(200) NOT NULL,
+        Budget DECIMAL(18,2) NOT NULL,
+        StartDate DATETIME2 NOT NULL,
+        DepartmentHeadId INT NULL,
+        CONSTRAINT PK_Department PRIMARY KEY (Id)
+    );
+END
+
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_Department_Instructor_DepartmentHeadId')
+BEGIN
+    ALTER TABLE dbo.Department
+        ADD CONSTRAINT FK_Department_Instructor_DepartmentHeadId
+            FOREIGN KEY (DepartmentHeadId) REFERENCES dbo.Instructor(Id)
+            ON DELETE SET NULL;
+END
+```
+
+## Reasoning: Non-Destructive
+
+- **Creating a new table** is non-destructive.
+- **DepartmentHeadId** is nullable, so existing departments can exist without a head.
+- The **filtered unique index** enforces “one head per instructor” while allowing many departments with no head.
+- **ON DELETE SET NULL** prevents accidental cascaded deletions of departments if a head instructor is removed.
+- The migration converges the schema incrementally and safely without data loss.  
+
+---
