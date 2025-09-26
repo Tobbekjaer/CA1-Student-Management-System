@@ -62,3 +62,30 @@ To achieve this, it uses the following techniques:
 - **Transactional safety**
     - The entire script is wrapped in a `BEGIN TRAN ... COMMIT` block
     - `SET XACT_ABORT ON` ensures that if any error occurs, the whole transaction is rolled back automatically
+
+---
+
+# State-based — V2 Add MiddleName to Student
+
+## Overview
+Added a nullable `MiddleName` column to the `Student` table using the state-based approach.
+
+## Schema Change
+- `Student`: added `MiddleName NVARCHAR(100) NULL`
+
+## Artifacts Produced
+- `state-approach/state/v2/schema.sql` – full schema at V2
+- `state-approach/artifacts/V2__AddMiddleName.sql` – idempotent deployment script
+
+## Deployment Logic
+```sql
+IF COL_LENGTH('Student', 'MiddleName') IS NULL
+BEGIN
+    ALTER TABLE Student ADD MiddleName NVARCHAR(100) NULL;
+END
+```
+
+## Reasoning: Non-Destructive
+- Non-destructive: existing data remains valid
+- Nullable: no backfill needed 
+- Idempotent: safe to re-run
