@@ -73,7 +73,6 @@ workspace.xml
 packages/
 project.lock.json
 project.fragment.lock.json
-artifacts/
 
 ############################
 # Docker
