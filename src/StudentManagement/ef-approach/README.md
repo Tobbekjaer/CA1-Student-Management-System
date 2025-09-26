@@ -227,4 +227,56 @@ dotnet ef migrations script V4__AddInstructorRelation V5__RenameGradeToFinalGrad
 
 ---
 
+# EF (Change-based) — V6 Add Department Relation
 
+## Overview
+This migration introduces a new `Department` entity into the schema.  
+Each department may optionally have a **DepartmentHead**, which must be an existing `Instructor`.  
+An instructor can be the head of at most one department, enforced by a unique index.
+
+---
+
+## Schema Changes
+
+- **Department**
+    - `Id` (PK, int, identity)
+    - `Name` (`nvarchar(200)`, required)
+    - `Budget` (`decimal(18,2)`, required)
+    - `StartDate` (`datetime2`, required)
+    - `DepartmentHeadId` (`int`, nullable, FK → `Instructor.Id`)
+
+- **Relationships**
+    - `DepartmentHeadId` → `Instructor.Id`
+    - `OnDelete = SET NULL` → if a head is deleted, the department remains valid but loses its head.
+    - **Unique index** on `DepartmentHeadId` ensures an instructor can lead at most one department.
+    - Multiple departments may have no head at all (`NULL` values allowed).
+
+---
+
+## Artifacts Produced
+- **EF migration (C#)**  
+  `src/StudentManagement/Migrations/<timestamp>_V6__AddDepartmentRelation.cs`
+
+- **Generated SQL script (V5 → V6)**  
+  `ef-approach/artifacts/V6__AddDepartmentRelation.sql`
+
+---
+
+## Commands Run
+```bash
+# 1) Create migration after adding Department model and Fluent API
+dotnet ef migrations add V6__AddDepartmentAndHead
+
+# 2) Generate SQL script for V5 -> V6 only
+dotnet ef migrations script V5__RenameGradeToFinalGrade V6__AddDepartmentAndHead -o ef-approach/artifacts/V6__AddDepartmentAndHead.sql
+```
+
+## Reasoning: Non-Destructive
+
+- **New table** (`Department`) creation is inherently non-destructive.
+- **FK column** (`DepartmentHeadId`) is nullable, so no existing data is invalidated.
+- **Unique index** is safe because the DB is new/empty during this migration. In a production scenario, data consistency checks would be needed first.
+- Using **`SET NULL`** delete behavior avoids cascading deletes of departments when instructors are removed.
+- This incremental, non-destructive approach allows existing entities to remain valid while adding richer modeling for departments.  
+
+---

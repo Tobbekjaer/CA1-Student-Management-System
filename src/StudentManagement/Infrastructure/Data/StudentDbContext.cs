@@ -95,5 +95,26 @@ public class StudentDbContext : DbContext
             // Prevent duplicate enrollments for same student+course
             e.HasIndex(x => new { x.StudentId, x.CourseId }).IsUnique();
         });
+        // Department
+        modelBuilder.Entity<Department>(b =>
+        {
+            b.HasKey(d => d.Id);
+            b.Property(d => d.Name)
+                .IsRequired()
+                .HasMaxLength(200);
+            b.Property(d => d.Budget)
+                .HasPrecision(18, 2);
+            b.Property(d => d.StartDate)
+                .IsRequired();
+
+            b.HasOne(d => d.DepartmentHead)
+                .WithOne(i => i.DepartmentHeadOf)
+                .HasForeignKey<Department>(d => d.DepartmentHeadId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            b.HasIndex(d => d.DepartmentHeadId)
+                .IsUnique()
+                .HasFilter("[DepartmentHeadId] IS NOT NULL");
+        });
     }
 }
