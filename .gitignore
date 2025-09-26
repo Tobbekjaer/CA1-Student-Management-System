@@ -1,0 +1,106 @@
+############################
+# OS-specific
+############################
+.DS_Store
+Thumbs.db
+
+############################
+# Environment files
+############################
+.env
+.env.*
+!.env.example
+
+############################
+# Logs
+############################
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+############################
+# Build results
+############################
+bin/
+obj/
+out/
+build/
+dist/
+publish/
+
+############################
+# JetBrains Rider / IntelliJ
+############################
+.idea/
+.idea/*
+.idea/**/*
+*.iml
+workspace.xml
+
+# VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+############################
+# User-specific files
+############################
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+############################
+# Visual Studio
+############################
+*.dbmdl
+*.bak
+*.backup
+*.ldf
+*.mdf
+*.ndf
+
+############################
+# NuGet
+############################
+*.nupkg
+*.snupkg
+packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+############################
+# Docker
+############################
+**/.env
+**/.env.*
+!.env.example
+.docker/
+docker-compose.override.yml
+
+############################
+# Node (if you have frontends)
+############################
+node_modules/
+npm-debug.log
+yarn.lock
+package-lock.json
+
+############################
+# Other
+############################
+*.swp
+*.swo
+*.tmp
+*.temp
+*.pid
+*.seed
+*.bak
+*.orig
+*.rej
