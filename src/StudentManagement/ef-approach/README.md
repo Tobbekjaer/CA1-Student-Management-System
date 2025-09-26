@@ -121,3 +121,68 @@ dotnet ef migrations script V2__AddMiddleName V3__AddDateOfBirth -o ef-approach/
 - No application downtime is needed, and all existing records remain valid.
 
 ---
+
+# EF (Change-based) — V4 Add Instructor Relation
+
+## Overview
+This migration introduces a new `Instructor` entity and connects it to the existing `Course` entity via a foreign key (`InstructorId`).  
+The relationship is defined as optional (nullable FK) and uses **`DeleteBehavior.Restrict`** to prevent accidental data loss.
+
+---
+
+## Schema Changes
+
+- **Course**
+    - Added column: `InstructorId` (`int`, **nullable**)
+    - Created foreign key: `InstructorId → Instructor.Id`
+        - On delete: `Restrict` (cannot delete an instructor if referenced)
+
+- **Instructor**
+    - `Id` (PK, int, identity)
+    - `FirstName` (`nvarchar(100)`, required)
+    - `LastName` (`nvarchar(100)`, required)
+    - `Email` (`nvarchar(255)`, required, **unique**)
+    - `HireDate` (`datetime2`, required)
+
+---
+
+## Artifacts Produced
+- **EF migration (C#)**  
+  `src/StudentManagement/Migrations/<timestamp>_V4__AddInstructorRelation.cs`
+- **Generated SQL script (V3 → V4)**  
+  `ef-approach/artifacts/V4__AddInstructorRelation.sql`
+
+---
+
+## Commands Run
+```bash
+# 1) Create migration after adding Instructor model and updating Fluent API
+dotnet ef migrations add V4__AddInstructorRelation
+
+# 2) Generate SQL script for V3 -> V4 only
+dotnet ef migrations script V3__AddDateOfBirth V4__AddInstructorRelation -o ef-approach/artifacts/V4__AddInstructorRelation.sql
+```
+## Reasoning: Non-Destructive
+
+- `Instructor` is a **new table** — no existing data is impacted.
+- `InstructorId` is added as a **nullable column** in `Course`, so existing course records remain valid.
+- Foreign key uses **`ON DELETE RESTRICT`** to protect against accidental cascade deletion of courses.
+- All constraints and indexes are added **incrementally** in a safe, migration-friendly way.
+
+---
+
+## Verification
+
+Ran the generated SQL against a local database and confirmed:
+
+- `Instructor` table created with all fields and unique `Email`
+- `InstructorId` column added to `Course`
+- Foreign key constraint `FK_Course_Instructor_InstructorId` exists and enforces referential integrity
+
+You can now:
+- Insert instructors
+- Assign instructors to courses via `InstructorId`
+- Query course-instructor relations via navigation properties
+
+---
+
