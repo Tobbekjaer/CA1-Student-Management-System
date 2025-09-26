@@ -186,3 +186,45 @@ You can now:
 
 ---
 
+# EF (Change-based) — V5 Rename Grade to FinalGrade in Enrollment
+
+## Overview
+This migration renames the `Grade` column in the `Enrollment` table to `FinalGrade`.  
+The rename was performed using EF Core’s `RenameColumn()` operation, which maps to SQL Server’s `sp_rename` command.
+
+---
+
+## Schema Change
+- **Enrollment**
+    - Renamed column: `Grade` → `FinalGrade` (`nvarchar(10)`, nullable)
+
+---
+
+## Artifacts Produced
+- **EF migration (C#)**  
+  `src/StudentManagement/Migrations/<timestamp>_V5__RenameGradeToFinalGrade.cs`
+
+- **Generated SQL script (V4 → V5)**  
+  `ef-approach/artifacts/V5__RenameGradeToFinalGrade.sql`
+
+---
+
+## Commands Run
+```bash
+# 1) Create migration after updating Enrollment model
+dotnet ef migrations add V5__RenameGradeToFinalGrade
+
+# 2) Generate SQL script for V4 -> V5 only
+dotnet ef migrations script V4__AddInstructorRelation V5__RenameGradeToFinalGrade -o ef-approach/artifacts/V5__RenameGradeToFinalGrade.sql
+```
+
+## Reasoning: Non-Destructive
+
+- The migration uses **`sp_rename`**, which only updates the column name metadata.
+- All existing values in the `Grade` column are preserved without requiring data migration.
+- Applications referencing the column via EF now transparently use the new property `FinalGrade`.
+- A destructive approach (drop + recreate column) would cause **data loss** and require backfilling, which is unnecessary and risky here.  
+
+---
+
+

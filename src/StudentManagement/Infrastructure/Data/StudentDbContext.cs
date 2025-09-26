@@ -78,7 +78,7 @@ public class StudentDbContext : DbContext
         {
             e.ToTable("Enrollment");
             e.HasKey(x => x.Id);
-            e.Property(x => x.Grade).HasMaxLength(10);
+            e.Property(x => x.FinalGrade).HasMaxLength(10);
 
             // FK: Enrollment -> Student
             e.HasOne(e => e.Student)
