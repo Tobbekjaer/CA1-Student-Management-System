@@ -89,3 +89,34 @@ END
 - Non-destructive: existing data remains valid
 - Nullable: no backfill needed 
 - Idempotent: safe to re-run
+
+---
+
+# State-based — V3 Add DateOfBirth to Student
+
+## Overview
+Added a not nullable `DateOfBirth` column to the `Student` table using the state-based approach.
+
+## Schema Change
+- `Student`: added `DateOfBirth DATETIME2 NOT NULL`
+
+## Artifacts Produced
+- `state-approach/state/v3/schema.sql` – full schema at V3
+- `state-approach/artifacts/V3__AddDateOfBirth.sql` – idempotent deployment script
+
+## Deployment Logic
+```sql
+IF COL_LENGTH('Student', 'DateOfBirth') IS NULL
+BEGIN
+ALTER TABLE Student ADD DateOfBirth datetime2 NOT NULL DEFAULT '0001-01-01T00:00:00.0000000';
+END
+```
+
+## Reasoning: Non-Destructive (via default value)
+
+- Adding a `NOT NULL` column is typically destructive as it would break existing rows.
+- However, this state-based migration uses a **default value** (`0001-01-01`) to safely backfill existing rows.
+- This adds the column with `NOT NULL` + `DEFAULT`, making the change **non-destructive** at runtime.
+- No application downtime is needed, and all existing records remain valid.
+
+---
