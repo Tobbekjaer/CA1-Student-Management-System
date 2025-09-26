@@ -24,7 +24,6 @@
     </ItemGroup>
     <ItemGroup>
       <Folder Include="ef-approach\artifacts\" />
-      <Folder Include="state-approach\artifacts\" />
       <Folder Include="state-approach\state\" />
     </ItemGroup>
 
