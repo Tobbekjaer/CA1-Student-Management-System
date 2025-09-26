@@ -120,3 +120,47 @@ END
 - No application downtime is needed, and all existing records remain valid.
 
 ---
+
+# State-based — V4 Add Instructor Relation
+
+## Overview
+Introduced a new `Instructor` table and added a nullable `InstructorId` column to the `Course` table. 
+This allows associating a course with an instructor without breaking existing data.
+
+## Schema Changes
+- New table: `Instructor (Id, FirstName, LastName, Email, HireDate)`
+- `Course`: added `InstructorId INT NULL` + foreign key to `Instructor(Id)`
+
+## Artifacts Produced
+- `state-approach/state/v4/schema.sql`
+- `state-approach/artifacts/V4__AddInstructorRelation.sql`
+
+## Deployment Logic (Essential)
+```sql
+IF OBJECT_ID('dbo.Instructor', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Instructor (...);
+END
+
+IF COL_LENGTH('dbo.Course', 'InstructorId') IS NULL
+BEGIN
+    ALTER TABLE dbo.Course ADD InstructorId INT NULL;
+END
+
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_Course_Instructor')
+BEGIN
+    ALTER TABLE dbo.Course
+        ADD CONSTRAINT FK_Course_Instructor
+        FOREIGN KEY (InstructorId) REFERENCES dbo.Instructor(Id);
+END
+```
+
+## Reasoning
+
+- This migration is non-destructive. The `Instructor` table is new and has no impact on existing data.  
+- The `InstructorId` column in `Course` is added as **nullable**, so no backfill is needed, and no existing rows are affected.  
+- By guarding each change, the script is idempotent and safe to run multiple times.
+
+---
+
+
