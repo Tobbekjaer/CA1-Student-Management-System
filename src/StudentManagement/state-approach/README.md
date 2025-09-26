@@ -163,4 +163,42 @@ END
 
 ---
 
+# State-based — V5 Rename Grade to FinalGrade in Enrollment
 
+## Overview
+Renamed the `Grade` column in the `Enrollment` table to `FinalGrade` using the state-based approach.  
+The deployment script is written to be **idempotent** and safe to run multiple times, handling different possible database states.
+
+---
+
+## Schema Change
+- **Enrollment**
+    - Renamed column: `Grade` → `FinalGrade` (`NVARCHAR(10) NULL`)
+
+---
+
+## Artifacts Produced
+- `state-approach/state/v5/schema.sql` – full schema at V5
+- `state-approach/artifacts/V5__RenameGradeToFinalGrade.sql` – idempotent deployment script
+
+---
+
+## Deployment Logic (Essential)
+```sql
+-- If FinalGrade doesn't exist but Grade does -> rename
+IF COL_LENGTH('dbo.Enrollment', 'FinalGrade') IS NULL
+   AND COL_LENGTH('dbo.Enrollment', 'Grade') IS NOT NULL
+BEGIN
+    EXEC sp_rename N'dbo.Enrollment.Grade', N'FinalGrade', 'COLUMN';
+END
+...
+.....
+.......
+```
+
+## Reasoning: Non-Destructive
+
+- The migration uses **`sp_rename`** when possible, which only updates metadata and preserves all data.
+- If both columns exist, the script **copies existing values** from `Grade` into `FinalGrade` before dropping the old column, avoiding data loss.
+- If neither column exists (edge case), the script **adds `FinalGrade`** to bring the schema into alignment.
+- This approach guarantees that existing data is retained and the schema converges to the desired state.  
