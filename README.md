@@ -2,8 +2,8 @@
 
 This project implements a simple **Student Management** system while demonstrating two different database migration strategies:
 
-- ✅ **Change-Based Migrations** using Entity Framework Core
-- ✅ **State-Based Migrations** using manual idempotent SQL scripts
+- **Change-Based Migrations** using Entity Framework Core
+- **State-Based Migrations** using manual idempotent SQL scripts
 
 The assignment focuses on:
 - Evolving the schema across multiple versions
@@ -13,7 +13,7 @@ The assignment focuses on:
 
 ---
 
-## 📄 Migration Approach READMEs
+## Migration Approach READMEs
 
 Each approach is fully documented with:
 - Version-by-version schema changes
