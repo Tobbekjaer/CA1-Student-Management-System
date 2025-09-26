@@ -30,6 +30,8 @@ public class StudentDbContext : DbContext
                 .IsRequired()
                 .HasMaxLength(255);
             e.HasIndex(s => s.Email).IsUnique();
+            e.Property(s => s.DateOfBirth)
+                .IsRequired();
             e.Property(s => s.EnrollmentDate)
                 .IsRequired();
         });
