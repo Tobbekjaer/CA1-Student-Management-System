@@ -14,6 +14,12 @@ This step creates the baseline (V1) with three tables and their relationships + 
 **Constraints**
 - Primary keys on all tables
 - Foreign keys from `Enrollment.StudentId` → `Student.Id` and `Enrollment.CourseId` → `Course.Id`
+- One `Student` can have many `Enrollments`(1 → 0..*)
+- One `Course` can have many `Enrollments`(1 → 0..*)
+
+**Cascade Delete**
+- If a `Student` row is deleted, all `Enrollment` rows referencing that student are automatically deleted by the database.
+- If a `Course` row is deleted, all `Enrollment` rows referencing that course are automatically deleted.
 
 ---
 
