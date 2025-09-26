@@ -21,7 +21,7 @@ public class StudentDbContext : DbContext
             e.Property(s => s.FirstName)
                 .IsRequired()
                 .HasMaxLength(100);
-            e.Property((s => s.MiddleName))
+            e.Property(s => s.MiddleName)
                 .HasMaxLength(100);
             e.Property(s => s.LastName)
                 .IsRequired()
@@ -35,6 +35,25 @@ public class StudentDbContext : DbContext
             e.Property(s => s.EnrollmentDate)
                 .IsRequired();
         });
+        
+        // INSTRUCTOR
+        modelBuilder.Entity<Instructor>(e =>
+        {
+            e.ToTable("Instructor");
+            e.HasKey(i => i.Id);
+            e.Property(c => c.FirstName)
+                .IsRequired()
+                .HasMaxLength(100);
+            e.Property(i => i.LastName)
+                .IsRequired()
+                .HasMaxLength(100);
+            e.Property(i => i.Email)
+                .IsRequired()
+                .HasMaxLength(255);
+            e.HasIndex(i => i.Email).IsUnique();
+            e.Property(i => i.HireDate)
+                .IsRequired();
+        });
 
         // COURSE
         modelBuilder.Entity<Course>(e =>
@@ -46,6 +65,12 @@ public class StudentDbContext : DbContext
                 .HasMaxLength(200);
             e.Property(c => c.Credits)
                 .IsRequired();
+            
+            // FK: Course -> Instructor
+            e.HasOne(c => c.Instructor)            
+                .WithMany(i => i.Courses)
+                .HasForeignKey(c => c.InstructorId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         // ENROLLMENT
@@ -53,21 +78,20 @@ public class StudentDbContext : DbContext
         {
             e.ToTable("Enrollment");
             e.HasKey(x => x.Id);
-            e.Property(x => x.Grade)
-                .HasMaxLength(10); 
-            
+            e.Property(x => x.Grade).HasMaxLength(10);
+
             // FK: Enrollment -> Student
-            e.HasOne<Student>()
-                .WithMany()               
-                .HasForeignKey(x => x.StudentId)
+            e.HasOne(e => e.Student)
+                .WithMany(s => s.Enrollments)
+                .HasForeignKey(e => e.StudentId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // FK: Enrollment -> Course
-            e.HasOne<Course>()
-                .WithMany()                      
-                .HasForeignKey(x => x.CourseId)
+            e.HasOne(e => e.Course)
+                .WithMany(c => c.Enrollments)
+                .HasForeignKey(e => e.CourseId)
                 .OnDelete(DeleteBehavior.Cascade);
-
+            
             // Prevent duplicate enrollments for same student+course
             e.HasIndex(x => new { x.StudentId, x.CourseId }).IsUnique();
         });
