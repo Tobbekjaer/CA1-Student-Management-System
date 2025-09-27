@@ -64,7 +64,8 @@ public class StudentDbContext : DbContext
                 .IsRequired()
                 .HasMaxLength(200);
             e.Property(c => c.Credits)
-                .IsRequired();
+                .IsRequired()
+                .HasPrecision(5, 2);
             
             // FK: Course -> Instructor
             e.HasOne(c => c.Instructor)            
@@ -95,6 +96,7 @@ public class StudentDbContext : DbContext
             // Prevent duplicate enrollments for same student+course
             e.HasIndex(x => new { x.StudentId, x.CourseId }).IsUnique();
         });
+        
         // Department
         modelBuilder.Entity<Department>(b =>
         {
