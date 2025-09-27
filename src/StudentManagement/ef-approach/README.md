@@ -280,3 +280,46 @@ dotnet ef migrations script V5__RenameGradeToFinalGrade V6__AddDepartmentAndHead
 - This incremental, non-destructive approach allows existing entities to remain valid while adding richer modeling for departments.  
 
 ---
+
+# EF (Change-based) — V7 Modify Course Credits
+
+## Overview
+This migration modifies the `Credits` column in the `Course` table.  
+The type changes from **int** to **decimal(5,2)** to allow fractional credits (e.g., `3.50`).  
+This broadens the precision of the model without data loss.
+
+---
+
+## Schema Change
+- **Course**
+    - Altered column: `Credits` (`int` → `decimal(5,2)`, **not null**)
+
+---
+
+## Artifacts Produced
+- **EF migration (C#)**  
+  `src/StudentManagement/Migrations/<timestamp>_V7__ModifyCourseCredits.cs`
+
+- **Generated SQL script (V6 → V7)**  
+  `ef-approach/artifacts/V7__ModifyCourseCredits.sql`
+
+---
+
+## Commands Run
+```bash
+# 1) Create migration after updating Course model and Fluent API
+dotnet ef migrations add V7__ModifyCourseCredits
+
+# 2) Generate SQL script for V6 -> V7 only
+dotnet ef migrations script V6__AddDepartmentAndHead V7__ModifyCourseCredits -o ef-approach/artifacts/V7__ModifyCourseCredits.sql
+```
+
+## Reasoning: Non-Destructive (Widening)
+
+- **Int → Decimal(5,2)** is a *widening conversion*:
+    - Existing integer values (`3`) are preserved as valid decimal values (`3.00`).
+    - No data loss occurs and the schema gains support for fractional credits.
+- The migration uses `ALTER COLUMN`, which updates the definition in place.
+- **Risk consideration**: all existing values must fit within `(5,2)` (up to 999.99). Verified with `INFORMATION_SCHEMA.COLUMNS` after migration.
+- **Rollback note**: The `Down` migration (`decimal → int`) may truncate fractional values if inserted after V7.  
+  In production, this would require either blocking the downgrade or implementing a safe two-step rollback strategy.
