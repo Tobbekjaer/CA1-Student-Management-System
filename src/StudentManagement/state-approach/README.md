@@ -264,3 +264,69 @@ END
 - The migration converges the schema incrementally and safely without data loss.  
 
 ---
+
+# State-based — V7 Modify Course Credits
+
+## Overview
+Modified the `Credits` column in the `Course` table to use a `DECIMAL(5,2)` type instead of `INT`.  
+This improves precision and allows fractional credit values (e.g., `3.5` credits).
+
+---
+
+## Schema Change
+- **Course**
+    - `Credits` column: changed from `INT NOT NULL` → `DECIMAL(5,2) NOT NULL`
+
+---
+
+## Artifacts Produced
+- `state-approach/state/v7/schema.sql` – full schema at V7
+- `state-approach/artifacts/V7__ModifyCourseRelation.sql` – idempotent deployment script
+
+---
+
+## Deployment Logic (Essential)
+```sql
+-- If Credits column does not exist, add with DECIMAL(5,2)
+IF COL_LENGTH('dbo.Course', 'Credits') IS NULL
+BEGIN
+    ALTER TABLE dbo.Course
+      ADD Credits DECIMAL(5,2) NOT NULL
+          CONSTRAINT DF_Course_Credits DEFAULT (0.00);
+END
+
+-- If Credits exists but is not DECIMAL(5,2) NOT NULL, convert it
+DECLARE @dfname SYSNAME;
+SELECT @dfname = dc.name
+FROM sys.default_constraints dc
+INNER JOIN sys.columns c
+  ON c.[object_id] = dc.parent_object_id
+ AND c.column_id   = dc.parent_column_id
+WHERE dc.parent_object_id = OBJECT_ID(N'dbo.Course')
+  AND c.[name] = N'Credits';
+
+IF @dfname IS NOT NULL
+BEGIN
+    DECLARE @sql NVARCHAR(MAX);
+    SET @sql = N'ALTER TABLE dbo.Course DROP CONSTRAINT ' + QUOTENAME(@dfname) + N';';
+    EXEC sys.sp_executesql @sql;
+END
+
+-- Ensure no NULL values remain
+UPDATE dbo.Course SET Credits = 0.00 WHERE Credits IS NULL;
+
+-- Apply type change
+ALTER TABLE dbo.Course ALTER COLUMN Credits DECIMAL(5,2) NOT NULL;
+```
+
+## Reasoning: Non-Destructive
+
+- **INT → DECIMAL(5,2)** is a **widening conversion**:  
+  All existing integer values remain valid and gain fractional support (e.g., `3` becomes `3.00`).
+
+- This makes the change **non-destructive**: no existing data is lost.
+
+- The script is written to be **idempotent**:
+    - If the `Credits` column already matches the target type, no changes are made.
+    - If the column is missing, it is created directly as `DECIMAL(5,2)`.
+    - If the column exists with a different type, it is safely altered after dropping any bound default constraints.  
